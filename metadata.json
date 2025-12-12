@@ -1,0 +1,7 @@
+{
+  "name": "MemoryBox Guardian",
+  "description": "An offline-first, privacy-focused inventory tracker that helps you remember where you left your belongings using on-device storage.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
