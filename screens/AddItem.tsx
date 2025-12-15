@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Category, InventoryItem } from '../types';
-import { saveItem, resizeImage, getSuggestions, getLocationOptions } from '../services/storageService';
+import { saveItem, updateItem, getItems, resizeImage, getSuggestions, getLocationOptions } from '../services/storageService';
 
 const AddItem: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [image, setImage] = useState<string | null>(null);
@@ -16,6 +17,8 @@ const AddItem: React.FC = () => {
   const [category, setCategory] = useState<Category>(Category.MISC);
   const [notes, setNotes] = useState('');
   const [secretCode, setSecretCode] = useState('');
+  const [isTrackable, setIsTrackable] = useState(true);
+  const [createdAt, setCreatedAt] = useState<number>(Date.now());
   
   // Suggestion State
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
@@ -29,7 +32,22 @@ const AddItem: React.FC = () => {
 
   useEffect(() => {
     setNameSuggestions(getSuggestions('name'));
-  }, []);
+    
+    if (id) {
+        const items = getItems();
+        const found = items.find(i => i.id === id);
+        if (found) {
+            setName(found.name);
+            setImage(found.image);
+            setLocation(found.location);
+            setCategory(found.category);
+            setNotes(found.notes);
+            setSecretCode(found.secretCode || '');
+            setIsTrackable(found.isTrackable !== false);
+            setCreatedAt(found.createdAt);
+        }
+    }
+  }, [id]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -41,9 +59,11 @@ const AddItem: React.FC = () => {
 
       setTimeout(() => {
         setIsAnalyzing(false);
-        const cats = Object.values(Category);
-        const randomCat = cats[Math.floor(Math.random() * cats.length)];
-        setCategory(randomCat);
+        if (!id) {
+            const cats = Object.values(Category);
+            const randomCat = cats[Math.floor(Math.random() * cats.length)];
+            setCategory(randomCat);
+        }
       }, 1500);
     }
   };
@@ -55,25 +75,30 @@ const AddItem: React.FC = () => {
     }
 
     const newItem: InventoryItem = {
-      id: Date.now().toString(),
+      id: id || Date.now().toString(),
       name,
       location,
       category, 
       notes,
       image,
       secretCode: secretCode || undefined,
-      createdAt: Date.now(),
-      tags: [category.toLowerCase()]
+      createdAt: createdAt,
+      tags: [category.toLowerCase()],
+      isTrackable
     };
 
-    saveItem(newItem);
+    if (id) {
+        updateItem(newItem);
+    } else {
+        saveItem(newItem);
+    }
     
     // Simulate Verification Reminder Setup
     if (verificationReminder) {
         alert('Verification reminder set for 30 days from now.');
     }
 
-    navigate('/app/home');
+    navigate(id ? '/app/manage' : '/app/home');
   };
 
   return (
@@ -88,7 +113,7 @@ const AddItem: React.FC = () => {
                 Cancel
              </button>
         </div>
-        <h2 className="font-bold text-dark text-lg">Add New Item</h2>
+        <h2 className="font-bold text-dark text-lg">{id ? 'Edit Item' : 'Add New Item'}</h2>
         <div className="w-8"></div> {/* Spacer for balance */}
       </div>
 
@@ -174,9 +199,39 @@ const AddItem: React.FC = () => {
             )}
         </div>
 
+        {/* Tracking Type Toggle */}
+        <div className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between border border-gray-50">
+            <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isTrackable ? 'bg-blue-100 text-primary' : 'bg-gray-100 text-gray-400'}`}>
+                    <span className="material-icons">{isTrackable ? 'bluetooth' : 'sensors_off'}</span>
+                </div>
+                <div>
+                    <h3 className="font-bold text-dark text-sm">Bluetooth Tracker</h3>
+                    <p className="text-xs text-gray-500">{isTrackable ? 'Item has a smart tag' : 'Standard item (Manual)'}</p>
+                </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={isTrackable} onChange={() => setIsTrackable(!isTrackable)} className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+        </div>
+
         {/* Visual Location Picker */}
         <div>
            <label className="block text-sm font-bold text-dark mb-2">Where is it?</label>
+           
+           {/* Manual Input */}
+           <div className="relative mb-3">
+               <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">place</span>
+               <input 
+                 type="text" 
+                 value={location}
+                 onChange={(e) => setLocation(e.target.value)}
+                 placeholder="Select or type custom location..."
+                 className="w-full p-4 pl-12 bg-white rounded-2xl text-dark placeholder-gray-400 font-medium outline-none border border-transparent focus:border-blue-200 focus:ring-4 focus:ring-blue-50 transition-all shadow-sm"
+               />
+           </div>
+
            <div className="overflow-x-auto no-scrollbar pb-2">
               <div className="flex space-x-3">
                  {locationOptions.map(loc => {
@@ -256,13 +311,13 @@ const AddItem: React.FC = () => {
                 <div className="h-px bg-gray-50 w-full"></div>
 
                 {/* Toggle 2 */}
-                <div className="flex items-center justify-between">
+                <div className={`flex items-center justify-between ${!isTrackable ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
                     <div>
                          <p className="text-sm font-bold text-dark">Notify if moved</p>
                          <p className="text-xs text-blue-400">Uses GPS to detect position change</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked={notifyMoved} onChange={() => setNotifyMoved(!notifyMoved)} className="sr-only peer" />
+                        <input type="checkbox" checked={notifyMoved} onChange={() => setNotifyMoved(!notifyMoved)} className="sr-only peer" disabled={!isTrackable} />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                 </div>
@@ -278,7 +333,7 @@ const AddItem: React.FC = () => {
              className="w-full bg-primary text-white font-bold h-14 rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-3 active:scale-[0.98] transition-transform text-[15px]"
           >
              <span className="material-icons">save</span>
-             Save Item
+             {id ? 'Update Item' : 'Save Item'}
           </button>
       </div>
     </div>

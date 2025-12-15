@@ -45,7 +45,7 @@ const Layout: React.FC = () => {
               to="/app/add"
               className="absolute -top-10 bg-primary text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg hover:bg-blue-600 transition-transform active:scale-95 shadow-blue-500/30 ring-4 ring-gray-50"
             >
-              <span className="material-icons text-3xl">qr_code_scanner</span>
+              <span className="material-icons text-3xl">add</span>
             </NavLink>
           </div>
 

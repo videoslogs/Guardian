@@ -8,6 +8,7 @@ export interface InventoryItem {
   secretCode?: string;
   createdAt: number;
   tags: string[];
+  isTrackable?: boolean;
 }
 
 export enum Category {

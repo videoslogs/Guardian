@@ -26,10 +26,12 @@ const ItemDetail: React.FC = () => {
     }
   }, [id, navigate]);
 
+  const isTrackable = item?.isTrackable !== false;
+
   // Leash Mode Logic
   useEffect(() => {
     let interval: any;
-    if (leashMode && item) {
+    if (leashMode && item && isTrackable) {
         // Simulate checking distance every few seconds
         interval = setInterval(() => {
             // In a real app, this would calculate distance between userPos and item coordinates.
@@ -41,7 +43,7 @@ const ItemDetail: React.FC = () => {
         }, 10000);
     }
     return () => clearInterval(interval);
-  }, [leashMode, item]);
+  }, [leashMode, item, isTrackable]);
 
   const toggleLeash = () => {
       const newState = !leashMode;
@@ -79,6 +81,7 @@ const ItemDetail: React.FC = () => {
   };
 
   const handleFind = () => {
+      if (!isTrackable) return;
       setIsFinding(true);
       setSignalStrength(10);
       
@@ -102,7 +105,10 @@ const ItemDetail: React.FC = () => {
     window.open(url, '_blank');
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
       if (item && item.id) {
           try {
@@ -160,7 +166,11 @@ const ItemDetail: React.FC = () => {
             </button>
         </div>
         <h2 className="font-bold text-dark text-lg">Details</h2>
-        <button onClick={handleDelete} className="text-red-500 font-bold text-[15px] flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-full shadow-sm border border-red-100 active:bg-red-100">
+        <button 
+            type="button"
+            onClick={handleDelete}
+            className="text-red-500 font-bold text-[15px] flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-full shadow-sm border border-red-100 active:bg-red-100 transition-colors cursor-pointer"
+        >
             <span className="material-icons text-sm">delete</span>
             Delete
         </button>
@@ -170,6 +180,12 @@ const ItemDetail: React.FC = () => {
         {/* Main Image */}
         <div className="relative w-full aspect-square rounded-[32px] overflow-hidden shadow-soft bg-white">
             <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            {!isTrackable && (
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1">
+                    <span className="material-icons text-sm">sensors_off</span>
+                    Manual
+                </div>
+            )}
         </div>
 
         {/* Title & Info */}
@@ -220,11 +236,12 @@ const ItemDetail: React.FC = () => {
          {/* Action Buttons */}
          <div className="flex gap-4">
              <button 
-               onClick={handleFind}
-               className="flex-1 bg-primary text-white font-bold h-14 rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-transform text-[15px]"
+               onClick={isTrackable ? handleFind : undefined}
+               disabled={!isTrackable}
+               className={`flex-1 font-bold h-14 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-transform text-[15px] ${isTrackable ? 'bg-primary text-white shadow-blue-500/30 active:scale-[0.98]' : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'}`}
              >
-                 <span className="material-icons">radar</span>
-                 Find Item
+                 <span className="material-icons">{isTrackable ? 'radar' : 'sensors_off'}</span>
+                 {isTrackable ? 'Find Item' : 'No Tracker'}
              </button>
              <button 
                onClick={handleShare}
@@ -242,24 +259,26 @@ const ItemDetail: React.FC = () => {
             </p>
          )}
 
-         {/* Leash Mode */}
-         <div className={`rounded-[24px] p-4 shadow-sm flex items-center justify-between mb-6 transition-colors duration-300 ${leashMode ? 'bg-red-50 border border-red-100' : 'bg-white'}`}>
-             <div className="flex items-center gap-3">
-                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${leashMode ? 'bg-red-500 text-white shadow-md shadow-red-200' : 'bg-gray-100 text-gray-400'}`}>
-                        <span className="material-icons">link</span>
+         {/* Leash Mode - Only if trackable */}
+         {isTrackable && (
+             <div className={`rounded-[24px] p-4 shadow-sm flex items-center justify-between mb-6 transition-colors duration-300 ${leashMode ? 'bg-red-50 border border-red-100' : 'bg-white'}`}>
+                 <div className="flex items-center gap-3">
+                     <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${leashMode ? 'bg-red-500 text-white shadow-md shadow-red-200' : 'bg-gray-100 text-gray-400'}`}>
+                            <span className="material-icons">link</span>
+                     </div>
+                     <div>
+                            <h3 className={`font-bold ${leashMode ? 'text-red-700' : 'text-dark'}`}>Leash Mode</h3>
+                            <p className={`text-sm ${leashMode ? 'text-red-400' : 'text-gray-500'}`}>
+                                {leashMode ? 'Monitoring distance...' : 'Alert me if I leave this behind'}
+                            </p>
+                     </div>
                  </div>
-                 <div>
-                        <h3 className={`font-bold ${leashMode ? 'text-red-700' : 'text-dark'}`}>Leash Mode</h3>
-                        <p className={`text-sm ${leashMode ? 'text-red-400' : 'text-gray-500'}`}>
-                            {leashMode ? 'Monitoring distance...' : 'Alert me if I leave this behind'}
-                        </p>
-                 </div>
+                 <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={leashMode} onChange={toggleLeash} className="sr-only peer" />
+                    <div className="w-12 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-500"></div>
+                 </label>
              </div>
-             <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={leashMode} onChange={toggleLeash} className="sr-only peer" />
-                <div className="w-12 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-500"></div>
-             </label>
-         </div>
+         )}
 
       </div>
     </div>

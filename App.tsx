@@ -10,6 +10,7 @@ import ItemDetail from './screens/ItemDetail';
 import Help from './screens/Help';
 import MapPage from './screens/MapPage';
 import Devices from './screens/Devices';
+import ManageItems from './screens/ManageItems';
 import { checkIsFirstTime } from './services/storageService';
 
 const App: React.FC = () => {
@@ -27,6 +28,7 @@ const App: React.FC = () => {
     <HashRouter>
       <Routes>
         <Route path="/" element={isFirstTime ? <Landing /> : <Navigate to="/app/home" replace />} />
+        <Route path="/landing" element={<Landing />} />
         
         {/* Help Screen (Standalone) */}
         <Route path="/help" element={<Help />} />
@@ -43,6 +45,8 @@ const App: React.FC = () => {
         
         {/* Full screen routes (no bottom nav) */}
         <Route path="/app/add" element={<AddItem />} />
+        <Route path="/app/edit/:id" element={<AddItem />} />
+        <Route path="/app/manage" element={<ManageItems />} />
         <Route path="/app/item/:id" element={<ItemDetail />} />
       </Routes>
     </HashRouter>

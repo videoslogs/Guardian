@@ -119,10 +119,16 @@ export const getLocationOptions = () => [
   { label: 'Bedroom', icon: 'hotel' },
   { label: 'Kitchen', icon: 'kitchen' },
   { label: 'Office', icon: 'business_center' },
+  { label: 'Bathroom', icon: 'bathtub' },
+  { label: 'Closet', icon: 'checkroom' },
   { label: 'Car', icon: 'directions_car' },
   { label: 'Bag', icon: 'backpack' },
   { label: 'Garage', icon: 'garage' },
+  { label: 'Basement', icon: 'foundation' },
   { label: 'Entryway', icon: 'door_front' },
+  { label: 'Garden', icon: 'yard' },
+  { label: 'School', icon: 'school' },
+  { label: 'Gym', icon: 'fitness_center' },
   { label: 'Other', icon: 'place' },
 ];
 

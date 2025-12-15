@@ -162,9 +162,15 @@ const Search: React.FC = () => {
                        </span>
                    )}
                 </div>
-                <div className="flex items-center gap-1.5 text-gray-500 text-[13px] font-medium truncate">
-                   <span className="material-icons text-sm text-gray-400">{locationIcon}</span>
-                   <span>{item.location || 'Unknown'}</span>
+                
+                <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5 text-gray-500 text-[13px] font-medium truncate">
+                       <span className="material-icons text-sm text-gray-400">{locationIcon}</span>
+                       <span>{item.location || 'Unknown'}</span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-medium pl-0.5">
+                        Added {new Date(item.createdAt).toLocaleDateString()} {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
                 </div>
               </div>
 

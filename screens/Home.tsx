@@ -32,9 +32,12 @@ const Home: React.FC = () => {
       {/* Custom Header */}
       <div className="px-6 pt-8 pb-4 bg-[#F8F9FE]">
         <div className="flex justify-between items-center mb-6 relative">
-           <div className="flex items-center gap-3">
+           <div 
+             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+             onClick={() => navigate('/landing')}
+           >
              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-primary">
-               <span className="material-icons text-xl">shield</span>
+               <span className="material-icons text-xl">verified_user</span>
              </div>
              <span className="text-xl font-bold text-dark tracking-tight">Guardian</span>
            </div>
@@ -117,7 +120,7 @@ const Home: React.FC = () => {
       <div className="px-6 mb-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-dark">My Items</h2>
         <button 
-          onClick={() => navigate('/app/search')} 
+          onClick={() => navigate('/app/manage')} 
           className="text-primary font-semibold text-sm flex items-center"
         >
           Manage <span className="material-icons text-sm ml-1">chevron_right</span>
@@ -131,6 +134,7 @@ const Home: React.FC = () => {
            const battery = Math.floor(Math.random() * (100 - 40) + 40);
            const isOffline = index % 3 === 2; // Every 3rd item "offline" for demo
            const locationIcon = getLocationIcon(item.location || 'Other');
+           const isTrackable = item.isTrackable !== false; 
            
            return (
             <div 
@@ -143,9 +147,15 @@ const Home: React.FC = () => {
                     
                     {/* Status Icon Overlay */}
                     <div className="absolute bottom-2 right-2 bg-white/90 w-8 h-8 rounded-full flex items-center justify-center shadow-sm backdrop-blur-sm">
-                        <span className={`material-icons text-[16px] ${isOffline ? 'text-red-400' : 'text-primary'}`}>
-                            {isOffline ? 'bluetooth_disabled' : 'bluetooth'}
-                        </span>
+                        {isTrackable ? (
+                            <span className={`material-icons text-[16px] ${isOffline ? 'text-red-400' : 'text-primary'}`}>
+                                {isOffline ? 'bluetooth_disabled' : 'bluetooth'}
+                            </span>
+                        ) : (
+                            <span className="material-icons text-[16px] text-gray-400">
+                                sensors_off
+                            </span>
+                        )}
                     </div>
                 </div>
                 
@@ -159,23 +169,30 @@ const Home: React.FC = () => {
                     </div>
 
                     {/* Battery/Status Row */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex gap-0.5">
-                           {[1,2,3,4].map(bar => (
-                               <div 
-                                key={bar} 
-                                className={`w-1 h-2.5 rounded-sm ${
-                                    isOffline 
-                                    ? 'bg-gray-200' 
-                                    : (bar <= 3 ? 'bg-primary' : 'bg-blue-100')
-                                }`}
-                               ></div>
-                           ))}
+                    {isTrackable ? (
+                        <div className="flex items-center justify-between">
+                            <div className="flex gap-0.5">
+                               {[1,2,3,4].map(bar => (
+                                   <div 
+                                    key={bar} 
+                                    className={`w-1 h-2.5 rounded-sm ${
+                                        isOffline 
+                                        ? 'bg-gray-200' 
+                                        : (bar <= 3 ? 'bg-primary' : 'bg-blue-100')
+                                    }`}
+                                   ></div>
+                               ))}
+                            </div>
+                            <span className={`text-[10px] font-bold ${isOffline ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {isOffline ? 'offline' : `${battery}%`}
+                            </span>
                         </div>
-                        <span className={`text-[10px] font-bold ${isOffline ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {isOffline ? 'offline' : `${battery}%`}
-                        </span>
-                    </div>
+                    ) : (
+                        <div className="text-[10px] font-bold text-gray-400 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md w-fit">
+                            <span className="material-icons text-[10px]">edit_off</span>
+                            Manual
+                        </div>
+                    )}
                 </div>
             </div>
            );
